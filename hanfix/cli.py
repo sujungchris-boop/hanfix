@@ -20,6 +20,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from hanfix import core  # noqa: E402
 
+# LANG=C 같은 환경에서도 한글 출력이 깨지지 않도록 강제
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 BOLD, DIM, RED, GRN, YEL, CYN, RST = (
     ("\033[1m", "\033[2m", "\033[31m", "\033[32m", "\033[33m", "\033[36m", "\033[0m")
     if sys.stdout.isatty() else ("",) * 7

@@ -10,6 +10,9 @@ permissions:
 jobs:
   release:
     runs-on: macos-14
+    env:
+      LANG: en_US.UTF-8
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
 

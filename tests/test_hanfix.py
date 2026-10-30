@@ -236,14 +236,14 @@ class T(unittest.TestCase):
         cli = os.path.join(ROOT, "bin", "hanfix")
         env = dict(os.environ, PYTHONPATH="")
         out = subprocess.run([cli, "scan", self.base, "--json"],
-                             capture_output=True, text=True, env=env)
+                             capture_output=True, text=True, encoding="utf-8", env=env)
         self.assertEqual(out.returncode, 1, out.stderr)
         data = json.loads(out.stdout)
         self.assertGreater(data["counts"]["nfd"], 0)
         self.assertEqual(data["volume"]["fstype"], "apfs")
 
         out2 = subprocess.run([cli, "scan", self.base, "--json", "--quiet"],
-                              capture_output=True, text=True, env=env)
+                              capture_output=True, text=True, encoding="utf-8", env=env)
         self.assertEqual(json.loads(out2.stdout)["counts"]["nfd"],
                          data["counts"]["nfd"])
 

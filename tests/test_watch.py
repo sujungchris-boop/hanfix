@@ -24,7 +24,8 @@ class WatchTest(unittest.TestCase):
                         HANFIX_WATCH_LOG=os.path.join(self.tmp, "test.log"))
         self.proc = subprocess.Popen(
             [CLI, "watch", self.tmp, "--fg", "--quiet", "0.4", "--stable", "0.4"],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=self.env)
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            encoding="utf-8", errors="replace", env=self.env)
         time.sleep(1.5)
 
     def tearDown(self):
@@ -86,7 +87,7 @@ class WatchTest(unittest.TestCase):
         time.sleep(4)
         self.assertIn(NFC("되돌릴파일") + ".txt", self.names())
         out = subprocess.run([CLI, "undo", "--json"], capture_output=True,
-                             text=True, env=self.env)
+                             text=True, encoding="utf-8", env=self.env)
         self.assertEqual(out.returncode, 0, out.stderr)
         self.assertIn(NFD("되돌릴파일") + ".txt", self.names())
 

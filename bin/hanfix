@@ -2,4 +2,5 @@
 # hanfix 런처 — PYTHONPATH 오염 회피, 번들 오염 방지
 unset PYTHONPATH
 export PYTHONDONTWRITEBYTECODE=1     # 번들 안에 __pycache__ 를 쓰지 않는다(서명 보존)
+export PYTHONUTF8=1                  # 로케일과 무관하게 UTF-8
 exec "${HANFIX_PYTHON:-/usr/bin/python3}" "$(dirname "$0")/../hanfix/cli.py" "$@"
