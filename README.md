@@ -44,10 +44,18 @@ Drag a folder, a file or a `.zip` onto the window.
 
 ### Always-on watching
 
-macOS blocks background apps from reading `~/Downloads`, `~/Documents` and `~/Desktop`.
-On first run, allow the prompts, or add HanFix under
-**System Settings → Privacy & Security → Full Disk Access**. Without it the watcher
-logs `권한 필요` and does nothing (it will not touch your files either).
+macOS only protects three folders: `~/Downloads`, `~/Desktop` and `~/Documents`.
+HanFix needs your approval once for those — allow the prompts, or add the app under
+**System Settings → Privacy & Security → Full Disk Access**. Without it the watcher logs
+`권한 필요` and does nothing (it will not touch your files either).
+
+**Any other folder** (e.g. `~/work`, an external drive) is not TCC-protected and is
+watched immediately, with no permission at all. If you keep your documents somewhere
+like `~/제안서`, point HanFix there and skip the permission entirely.
+
+Because the app is ad-hoc signed, replacing it with a new version gives it a new
+signature and macOS asks for the folder permission again. Re-enable it once after
+updating.
 
 Open **설정 (⌘,)** and choose folders — Downloads, Desktop and Documents by default.
 New or moved-in files are normalized within a few seconds, in the background, with
