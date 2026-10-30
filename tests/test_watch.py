@@ -62,6 +62,17 @@ class WatchTest(unittest.TestCase):
             self.fail("감시자가 시작되지 않았습니다.\n로그:\n"
                       + read_text(self.logfile) + "\n출력:\n" + (out or ""))
 
+        # 이 환경이 FSEvents 이벤트를 실제로 전달하는지 확인한다.
+        # GitHub Actions 의 macOS 러너(가상 머신)는 이벤트를 주지 않으므로
+        # 실패가 아니라 '건너뜀'으로 표시한다 — 데스크톱 세션에서만 검증 가능한 테스트다.
+        probe = NFD("_hanfix_probe") + ".txt"
+        open(os.path.join(self.tmp, probe), "w").write("x")
+        if not wait_for(lambda: NFC("_hanfix_probe") + ".txt" in self.names(), timeout=6):
+            self.proc.terminate()
+            raise unittest.SkipTest(
+                "이 환경은 FSEvents 이벤트를 전달하지 않습니다 (CI 가상 머신). "
+                "실제 macOS 데스크톱에서 실행하세요.")
+
     def tearDown(self):
         self.proc.terminate()
         try:
