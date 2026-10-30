@@ -1,0 +1,15 @@
+# build artifacts
+build/
+vendor/
+*.dmg
+*.sha256
+
+# python
+__pycache__/
+*.pyc
+
+# mac
+.DS_Store
+
+# local logs
+*.log

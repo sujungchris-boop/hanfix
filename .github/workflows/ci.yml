@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 tests/test_hanfix.py
+      - name: Watcher integration tests
+        run: python3 tests/test_watch.py
+      - name: Build app
+        run: |
+          ./scripts/fetch_runtime.sh
+          ./scripts/build.sh
+      - name: Smoke test (bundled runtime)
+        run: |
+          mkdir -p "$RUNNER_TEMP/smoke"
+          python3 -c "import unicodedata as u,os; open(os.path.join(os.environ['RUNNER_TEMP'],'smoke',u.normalize('NFD','확인')+'.txt'),'w').write('x')"
+          ./build/HanFix.app/Contents/MacOS/HanFix --selftest "$RUNNER_TEMP/smoke"

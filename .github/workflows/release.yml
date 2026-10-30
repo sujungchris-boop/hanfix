@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch bundled runtime
+        run: ./scripts/fetch_runtime.sh
+
+      - name: Build app
+        run: ./scripts/build.sh
+
+      - name: Tests
+        run: |
+          python3 tests/test_hanfix.py
+          python3 tests/test_watch.py
+
+      - name: Build DMG
+        run: ./scripts/build_dmg.sh
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: HanFix ${{ github.ref_name }}
+          body: |
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+
+            **Install**: download the `.dmg` below, drag HanFix.app to Applications.
+            First launch: right-click the app → Open → Open.
+          files: |
+            build/HanFix-*.dmg
+            build/HanFix-*.dmg.sha256
