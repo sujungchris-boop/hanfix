@@ -8,7 +8,9 @@ import sys
 import tempfile
 import unicodedata as u
 import unittest
+import struct
 import zipfile
+import zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -59,6 +61,28 @@ def build_fixture(base):
         f.write("junk")
     # 심볼릭 링크: 링크 자신의 이름만 정리, 대상은 그대로
     os.symlink(os.path.join(base, NFD("견적서.pdf")), os.path.join(base, NFD("바로가기")))
+
+
+def write_raw_zip(path, entries):
+    """이름을 '원바이트 그대로', UTF-8 플래그 없이 넣는 ZIP 생성기.
+
+    zipfile 의 비공개 API(_encodeFilenameFlags)는 파이썬 버전마다 달라져서
+    테스트가 깨진다. 형식을 직접 써서 어느 버전에서나 같은 결과를 만든다.
+    """
+    body, central = b"", b""
+    for raw_name, data in entries:
+        crc = zlib.crc32(data) & 0xFFFFFFFF
+        local = struct.pack("<IHHHHHIIIHH", 0x04034B50, 20, 0, 0, 0, 0x21,
+                            crc, len(data), len(data), len(raw_name), 0) + raw_name
+        offset = len(body)
+        body += local + data
+        central += struct.pack("<IHHHHHHIIIHHHHHII", 0x02014B50, 20, 20, 0, 0, 0, 0x21,
+                               crc, len(data), len(data), len(raw_name), 0, 0, 0, 0, 0,
+                               offset) + raw_name
+    eocd = struct.pack("<IHHHHIIH", 0x06054B50, 0, 0, len(entries), len(entries),
+                       len(central), len(body), 0)   # cd_offset = 본문 길이
+    with open(path, "wb") as f:
+        f.write(body + central + eocd)
 
 
 class T(unittest.TestCase):
@@ -186,20 +210,9 @@ class T(unittest.TestCase):
     # ── 4. unzip
     def test_unzip_recovers_cp949_names(self):
         """옛 윈도우 도구가 만든 CP949 이름 zip → 한글 복원 + NFC."""
-        class RawNameInfo(zipfile.ZipInfo):
-            """플래그 없이 CP949 원바이트로 이름을 심는 ZipInfo."""
-            def __init__(self, raw_bytes, flag_bits=0):
-                super().__init__(raw_bytes.decode("cp437"))
-                self._raw = raw_bytes
-                self.flag_bits = flag_bits
-
-            def _encodeFilenameFlags(self):
-                return self._raw, self.flag_bits
-
         src = os.path.join(self.tmp, "win.zip")
-        with zipfile.ZipFile(src, "w") as z:
-            for name, body in [("보고서.hwp", "a"), ("사진/단체.jpg", "b")]:
-                z.writestr(RawNameInfo(name.encode("cp949")), body)
+        write_raw_zip(src, [(name.encode("cp949"), body.encode())
+                            for name, body in [("보고서.hwp", "a"), ("사진/단체.jpg", "b")]])
         with zipfile.ZipFile(src) as z:
             infos = z.infolist()
             self.assertTrue(all(not (i.flag_bits & UTF8_FLAG) for i in infos),

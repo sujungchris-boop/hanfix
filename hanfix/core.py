@@ -647,7 +647,18 @@ def extract_zip(zip_path, dest=None, overwrite=False) -> dict:
 
     written, repaired, skipped, errors = 0, 0, [], []
     names_before, names_after = [], []
-    with zipfile.ZipFile(zip_path) as z:
+
+    # 어떤 도구는 UTF-8 플래그를 켜놓고 CP949 바이트를 넣는다.
+    # 그러면 파이썬이 중앙 디렉터리를 읽다 UnicodeDecodeError 로 죽으므로 재시도한다.
+    try:
+        zf = zipfile.ZipFile(zip_path)
+    except UnicodeDecodeError:
+        try:
+            zf = zipfile.ZipFile(zip_path, metadata_encoding="cp949")
+            errors.append({"entry": "(아카이브)", "error": "이름이 UTF-8로 표시됐지만 CP949입니다 — 복원 모드로 엽니다"})
+        except TypeError:      # metadata_encoding: Python 3.11+
+            raise
+    with zf as z:
         for info in z.infolist():
             raw_name = _decode_entry_name(info)
             names_before.append(raw_name)
